@@ -7,6 +7,7 @@ import pyttsx3
 from PIL import Image, ImageTk, ImageSequence
 import threading
 import speech_recognition as sr
+from datetime import datetime
 
 # 🔐 Configuración de entorno
 def ruta_relativa(ruta):
@@ -118,7 +119,6 @@ def agregar_mensaje(texto_msg, tipo="usuario", respuesta_voz=None):
 
         def toggle_voz():
             if estado["hablando"]:
-                # Si está hablando, se interrumpe
                 estado["interrumpido"] = True
                 engine.stop()
                 avatar.detener_animacion()
@@ -148,7 +148,9 @@ def agregar_mensaje(texto_msg, tipo="usuario", respuesta_voz=None):
 
 # 🔁 Procesar pregunta
 def procesar_pregunta(pregunta):
-    respuesta = obtener_respuesta(pregunta)
+    hoy = datetime.now().strftime("%d de %B de %Y")
+    contexto = f"La fecha actual es {hoy}. "
+    respuesta = obtener_respuesta(contexto + pregunta)
     agregar_mensaje(respuesta, "asistente", respuesta)
 
 # ⌨️ Enviar por texto
@@ -174,7 +176,8 @@ header.pack(fill=tk.X)
 logo_frame = tk.Frame(header, bg="#2e2e2e")
 logo_frame.pack(pady=5)
 
-icono_img = Image.open(ruta_relativa("assets/icono.ico")).resize((24, 24), Image.LANCZOS)
+# ✅ Usar PNG para el logo en pantalla
+icono_img = Image.open(ruta_relativa("assets/icono.png")).resize((24, 24), Image.LANCZOS)
 icono_tk = ImageTk.PhotoImage(icono_img)
 
 logo_icon = tk.Label(logo_frame, image=icono_tk, bg="#2e2e2e")
@@ -223,5 +226,9 @@ btn_hablar = tk.Button(
     pady=5
 )
 btn_hablar.pack(side=tk.RIGHT, padx=10)
+
+# 🟢 Mensaje de bienvenida al iniciar
+mensaje_bienvenida = "¡Hola! Soy CatMini, tu asistente virtual. ¿En qué puedo ayudarte hoy?"
+agregar_mensaje(mensaje_bienvenida, tipo="asistente", respuesta_voz=mensaje_bienvenida)
 
 ventana.mainloop()

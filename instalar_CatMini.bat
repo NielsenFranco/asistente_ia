@@ -1,7 +1,7 @@
 @echo off
 title Instalador de CatMini 🐾
 echo ===========================================
-echo        CatMini - Instalación Automática
+echo        CatMini - Instalacion Automatica
 echo ===========================================
 echo.
 
@@ -53,31 +53,33 @@ echo ✅ Dependencias instaladas correctamente.
 
 :: Verificar archivos requeridos
 echo [4/6] Verificando archivos requeridos...
-set MISSING=0
-
 if not exist assets\avatar.gif (
     echo ❌ Faltante: assets\avatar.gif
-    set MISSING=1
+    pause
+    exit /b
 )
 if not exist assets\icono.ico (
     echo ❌ Faltante: assets\icono.ico
-    set MISSING=1
+    pause
+    exit /b
+)
+if not exist assets\icono.png (
+    echo ❌ Faltante: assets\icono.png
+    pause
+    exit /b
 )
 if not exist assets\altavoz.png (
     echo ❌ Faltante: assets\altavoz.png
-    set MISSING=1
+    pause
+    exit /b
 )
 if not exist assets\pause.png (
     echo ❌ Faltante: assets\pause.png
-    set MISSING=1
+    pause
+    exit /b
 )
 if not exist .env (
     echo ❌ Faltante: archivo .env con tu GEMINI_API_KEY
-    set MISSING=1
-)
-
-if %MISSING%==1 (
-    echo 🔴 Por favor, agregá los archivos faltantes y volvé a ejecutar.
     pause
     exit /b
 )
@@ -100,6 +102,6 @@ rmdir /s /q __pycache__ >nul 2>&1
 del main.spec >nul 2>&1
 
 echo.
-echo 🐾 CatMini está listo para usarse.
+echo 🐾 CatMini esta listo para usarse.
 echo 📂 Ejecutable disponible en: ejecutable\CatMini.exe
 pause
