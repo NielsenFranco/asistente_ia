@@ -1,7 +1,8 @@
-flask
 google-generativeai
 speechrecognition
 pyttsx3
 pyaudio
-pygame
+pillow
+python-dotenv
 requests
+

@@ -8,6 +8,7 @@ from PIL import Image, ImageTk, ImageSequence
 import threading
 import speech_recognition as sr
 from datetime import datetime
+import re
 
 # 🔐 Configuración de entorno
 def ruta_relativa(ruta):
@@ -22,7 +23,13 @@ model = genai.GenerativeModel("gemini-1.5-flash")
 # 🎤 Voz
 engine = pyttsx3.init()
 engine.setProperty("rate", 175)
-engine.setProperty("voice", "spanish")
+
+# Seleccionar voz en español si está disponible
+voices = engine.getProperty("voices")
+for voice in voices:
+    if "spanish" in voice.name.lower() or "es" in voice.id.lower():
+        engine.setProperty("voice", voice.id)
+        break
 
 # 🖼️ Avatar
 class AvatarAnimado(tk.Label):
@@ -71,6 +78,33 @@ def obtener_respuesta(pregunta):
     except Exception as e:
         return f"⚠️ Error al contactar Gemini: {e}"
 
+# 💬 Formato Markdown (negrita, cursiva, subrayado)
+def aplicar_formato_markdown(parent, text, fg, bg):
+    partes = re.split(r'(\*\*[^\*]+\*\*|_[^_]+_|\*[^\*]+\*)', text)
+    for parte in partes:
+        if parte.startswith("**") and parte.endswith("**"):
+            estilo = ("Segoe UI", 11, "bold")
+            contenido = parte[2:-2]
+        elif parte.startswith("_") and parte.endswith("_"):
+            estilo = ("Segoe UI", 11, "underline")
+            contenido = parte[1:-1]
+        elif parte.startswith("*") and parte.endswith("*"):
+            estilo = ("Segoe UI", 11, "italic")
+            contenido = parte[1:-1]
+        else:
+            estilo = ("Segoe UI", 11)
+            contenido = parte
+
+        tk.Label(
+            parent,
+            text=contenido,
+            wraplength=400,
+            justify='left',
+            font=estilo,
+            bg=bg,
+            fg=fg
+        ).pack(anchor='w', padx=2, side=tk.LEFT)
+
 # 💬 Añadir mensajes
 def agregar_mensaje(texto_msg, tipo="usuario", respuesta_voz=None):
     burbuja = tk.Frame(cuerpo, bg="#1e1e1e", pady=5)
@@ -78,18 +112,10 @@ def agregar_mensaje(texto_msg, tipo="usuario", respuesta_voz=None):
     color_texto = "#fff" if tipo == "usuario" else "#ddd"
     alineacion = tk.RIGHT if tipo == "usuario" else tk.LEFT
 
-    texto = tk.Label(
-        burbuja,
-        text=texto_msg,
-        wraplength=400,
-        justify='left',
-        font=("Arial", 11),
-        bg=color_fondo,
-        fg=color_texto,
-        padx=10,
-        pady=5
-    )
-    texto.pack(side=alineacion, padx=5)
+    marco_contenido = tk.Frame(burbuja, bg=color_fondo)
+    marco_contenido.pack(side=alineacion, padx=5)
+
+    aplicar_formato_markdown(marco_contenido, texto_msg, fg=color_texto, bg=color_fondo)
 
     if tipo == "asistente" and respuesta_voz:
         icono_play = Image.open(ruta_relativa("assets/altavoz.png")).resize((20, 20), Image.LANCZOS)
@@ -97,11 +123,7 @@ def agregar_mensaje(texto_msg, tipo="usuario", respuesta_voz=None):
         icono_play_tk = ImageTk.PhotoImage(icono_play)
         icono_pause_tk = ImageTk.PhotoImage(icono_pause)
 
-        estado = {
-            "hablando": False,
-            "hilo": None,
-            "interrumpido": False
-        }
+        estado = {"hablando": False, "hilo": None, "interrumpido": False}
 
         def hablar():
             estado["hablando"] = True
@@ -176,7 +198,6 @@ header.pack(fill=tk.X)
 logo_frame = tk.Frame(header, bg="#2e2e2e")
 logo_frame.pack(pady=5)
 
-# ✅ Usar PNG para el logo en pantalla
 icono_img = Image.open(ruta_relativa("assets/icono.png")).resize((24, 24), Image.LANCZOS)
 icono_tk = ImageTk.PhotoImage(icono_img)
 
@@ -184,7 +205,7 @@ logo_icon = tk.Label(logo_frame, image=icono_tk, bg="#2e2e2e")
 logo_icon.image = icono_tk
 logo_icon.pack(side=tk.LEFT, padx=5)
 
-logo_text = tk.Label(logo_frame, text="CatMini", font=("Arial", 14, "bold"), fg="#fff", bg="#2e2e2e")
+logo_text = tk.Label(logo_frame, text="CatMini", font=("Segoe UI", 14, "bold"), fg="#fff", bg="#2e2e2e")
 logo_text.pack(side=tk.LEFT)
 
 avatar = AvatarAnimado(header, ruta_relativa("assets/avatar.gif"))
@@ -209,14 +230,14 @@ scroll.pack(side=tk.RIGHT, fill=tk.Y)
 footer = tk.Frame(ventana, bg="#2e2e2e", pady=5)
 footer.pack(fill=tk.X)
 
-entrada = tk.Entry(footer, font=("Arial", 12), bg="#3c3c3c", fg="#fff", insertbackground="#fff")
+entrada = tk.Entry(footer, font=("Segoe UI", 12), bg="#3c3c3c", fg="#fff", insertbackground="#fff")
 entrada.pack(side=tk.LEFT, padx=(10, 5), pady=10, fill=tk.X, expand=True)
 entrada.bind("<Return>", enviar_texto)
 
 btn_hablar = tk.Button(
     footer,
     text="🎤 Hablar",
-    font=("Arial", 11),
+    font=("Segoe UI", 11),
     command=escuchar_microfono,
     bg="#4a90e2",
     fg="#fff",
@@ -227,8 +248,8 @@ btn_hablar = tk.Button(
 )
 btn_hablar.pack(side=tk.RIGHT, padx=10)
 
-# 🟢 Mensaje de bienvenida al iniciar
-mensaje_bienvenida = "¡Hola! Soy CatMini, tu asistente virtual. ¿En qué puedo ayudarte hoy?"
-agregar_mensaje(mensaje_bienvenida, tipo="asistente", respuesta_voz=mensaje_bienvenida)
+# 🟢 Mensaje de bienvenida
+mensaje_bienvenida = "¡Hola! Soy **CatMini**, tu asistente virtual. ¿En qué puedo ayudarte hoy?"
+agregar_mensaje(mensaje_bienvenida, tipo="asistente", respuesta_voz="Hola! Soy CatMini, tu asistente virtual. ¿En qué puedo ayudarte hoy?")
 
 ventana.mainloop()
